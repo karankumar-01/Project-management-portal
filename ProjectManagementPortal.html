@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Management Portal</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#f4f7fc;
+    padding:20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    color:#333;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:25px;
+}
+
+.card{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+.card h2{
+    color:#2563eb;
+    margin-bottom:10px;
+}
+
+.form{
+    background:#fff;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+.form input,
+.form textarea,
+.form select{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+.btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#1d4ed8;
+}
+
+.projects{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:15px;
+}
+
+.project{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.project h3{
+    margin-bottom:10px;
+}
+
+.progress{
+    width:100%;
+    height:10px;
+    background:#ddd;
+    border-radius:10px;
+    overflow:hidden;
+    margin:10px 0;
+}
+
+.progress-bar{
+    height:100%;
+    background:green;
+}
+
+.actions{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+}
+
+.delete{
+    background:red;
+}
+
+.complete{
+    background:green;
+}
+
+@media(max-width:768px){
+    .actions{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>📊 Project Management Portal</h1>
+
+    <div class="dashboard">
+        <div class="card">
+            <h2 id="totalProjects">0</h2>
+            <p>Total Projects</p>
+        </div>
+
+        <div class="card">
+            <h2 id="completedProjects">0</h2>
+            <p>Completed</p>
+        </div>
+
+        <div class="card">
+            <h2 id="pendingProjects">0</h2>
+            <p>Pending</p>
+        </div>
+    </div>
+
+    <div class="form">
+        <input type="text" id="projectName" placeholder="Project Name">
+
+        <textarea id="projectDesc"
+        placeholder="Project Description"></textarea>
+
+        <select id="projectPriority">
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+        </select>
+
+        <button class="btn" onclick="addProject()">
+            Add Project
+        </button>
+    </div>
+
+    <div class="projects" id="projectList"></div>
+
+</div>
+
+<script>
+
+let projects =
+JSON.parse(localStorage.getItem("projects")) || [];
+
+function saveData(){
+    localStorage.setItem(
+        "projects",
+        JSON.stringify(projects)
+    );
+}
+
+function addProject(){
+
+    let name =
+    document.getElementById("projectName").value;
+
+    let desc =
+    document.getElementById("projectDesc").value;
+
+    let priority =
+    document.getElementById("projectPriority").value;
+
+    if(name===""){
+        alert("Enter Project Name");
+        return;
+    }
+
+    projects.push({
+        id:Date.now(),
+        name,
+        desc,
+        priority,
+        status:"Pending",
+        progress:0
+    });
+
+    saveData();
+    displayProjects();
+
+    document.getElementById("projectName").value="";
+    document.getElementById("projectDesc").value="";
+}
+
+function deleteProject(id){
+
+    projects =
+    projects.filter(project =>
+    project.id !== id);
+
+    saveData();
+    displayProjects();
+}
+
+function completeProject(id){
+
+    projects =
+    projects.map(project=>{
+
+        if(project.id===id){
+            project.status="Completed";
+            project.progress=100;
+        }
+
+        return project;
+    });
+
+    saveData();
+    displayProjects();
+}
+
+function updateDashboard(){
+
+    document.getElementById(
+    "totalProjects").innerText=
+    projects.length;
+
+    document.getElementById(
+    "completedProjects").innerText=
+    projects.filter(p=>
+    p.status==="Completed").length;
+
+    document.getElementById(
+    "pendingProjects").innerText=
+    projects.filter(p=>
+    p.status==="Pending").length;
+}
+
+function displayProjects(){
+
+    let list =
+    document.getElementById("projectList");
+
+    list.innerHTML="";
+
+    projects.forEach(project=>{
+
+        list.innerHTML += `
+        <div class="project">
+
+            <h3>${project.name}</h3>
+
+            <p>${project.desc}</p>
+
+            <br>
+
+            <p><b>Priority:</b>
+            ${project.priority}</p>
+
+            <p><b>Status:</b>
+            ${project.status}</p>
+
+            <div class="progress">
+                <div class="progress-bar"
+                style="width:${project.progress}%">
+                </div>
+            </div>
+
+            <p>${project.progress}% Complete</p>
+
+            <div class="actions">
+
+                <button
+                class="btn complete"
+                onclick="completeProject(${project.id})">
+                Complete
+                </button>
+
+                <button
+                class="btn delete"
+                onclick="deleteProject(${project.id})">
+                Delete
+                </button>
+
+            </div>
+
+        </div>
+        `;
+    });
+
+    updateDashboard();
+}
+
+displayProjects();
+
+</script>
+
+</body>
+</html>
